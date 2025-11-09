@@ -2,11 +2,6 @@
 using ReferenceWebApi.Domain.Entities;
 using ReferenceWebApi.Domain.Interfaces;
 using ReferenceWebApi.Infrastructure.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReferenceWebApi.Infrastructure.Repositories
 {
