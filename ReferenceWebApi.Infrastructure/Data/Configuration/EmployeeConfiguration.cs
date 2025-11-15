@@ -1,17 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ReferenceWebApi.Domain.Entities;
 
 namespace ReferenceWebApi.Infrastructure.Data.Configuration
 {
-    public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
+    public class EmployeeConfiguration : EntityBaseConfiguration<Employee>
     {
-        public void Configure(EntityTypeBuilder<Employee> builder)
+        public override void Configure(EntityTypeBuilder<Employee> builder)
         {
+            // Apply base entity configuration (Id, audit fields, indexes)
+            base.Configure(builder);
+
+            // Table name
             builder.ToTable("Employees");
 
-            builder.HasKey(e => e.Id);
-
+            // Employee-specific properties
             builder.Property(e => e.FirstName)
                 .IsRequired()
                 .HasMaxLength(100);
@@ -23,10 +26,6 @@ namespace ReferenceWebApi.Infrastructure.Data.Configuration
             builder.Property(e => e.Email)
                 .IsRequired()
                 .HasMaxLength(255);
-
-            builder.HasIndex(e => e.Email)
-                .IsUnique()
-                .HasFilter("[IsDeleted] = 0");
 
             builder.Property(e => e.PhoneNumber)
                 .HasMaxLength(20);
@@ -42,15 +41,17 @@ namespace ReferenceWebApi.Infrastructure.Data.Configuration
             builder.Property(e => e.Salary)
                 .HasColumnType("decimal(18,2)");
 
-            builder.Property(e => e.CreatedBy)
-                .HasMaxLength(100);
+            // Employee-specific indexes
+            builder.HasIndex(e => e.Email)
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0")
+                .HasDatabaseName("IX_Employees_Email");
 
-            builder.Property(e => e.UpdatedBy)
-                .HasMaxLength(100);
+            builder.HasIndex(e => e.Department)
+                .HasDatabaseName("IX_Employees_Department");
 
-            builder.HasIndex(e => e.Department);
-            builder.HasIndex(e => e.IsActive);
-            builder.HasIndex(e => e.CreatedAt);
+            builder.HasIndex(e => e.IsActive)
+                .HasDatabaseName("IX_Employees_IsActive");
         }
     }
 }

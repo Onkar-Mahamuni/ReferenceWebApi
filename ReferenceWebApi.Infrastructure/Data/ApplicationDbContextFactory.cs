@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace ReferenceWebApi.Infrastructure.Data
 {
+    /// Design-time factory for EF Core migrations
+    /// Used by: dotnet ef migrations add/update commands
     public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
         public ApplicationDbContext CreateDbContext(string[] args)

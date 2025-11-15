@@ -25,7 +25,7 @@ namespace ReferenceWebApi.Infrastructure.Repositories
         {
             return await _dbSet.ToListAsync(cancellationToken);
         }
-
+        
         public virtual async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(
             int pageNumber,
             int pageSize,
@@ -62,9 +62,11 @@ namespace ReferenceWebApi.Infrastructure.Repositories
             var entity = await GetByIdAsync(id, cancellationToken);
             if (entity is not null)
             {
-                entity.IsDeleted = true;
-                entity.DeletedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync(cancellationToken);
+                //entity.IsDeleted = true;
+                //entity.DeletedAt = DateTime.UtcNow;
+                //await _context.SaveChangesAsync(cancellationToken);
+                _context.Set<T>().Remove(entity); // This marks as Deleted
+                await _context.SaveChangesAsync(cancellationToken); // UpdateAuditFields converts to soft delete
             }
         }
 

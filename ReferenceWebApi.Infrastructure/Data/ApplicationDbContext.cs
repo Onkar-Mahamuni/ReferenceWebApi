@@ -1,11 +1,30 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using ReferenceWebApi.Application.Interfaces;
 using ReferenceWebApi.Domain.Entities;
 
 namespace ReferenceWebApi.Infrastructure.Data
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
+    public class ApplicationDbContext : DbContext
     {
+        private readonly IUserContextService? _userContextService;
+
+        // Constructor for runtime (with DI)
+        public ApplicationDbContext(
+            DbContextOptions options,
+            IUserContextService userContextService)
+            : base(options)
+        {
+            _userContextService = userContextService;
+        }
+
+        // Constructor for design-time (migrations)
+        public ApplicationDbContext(DbContextOptions options)
+            : base(options)
+        {
+            // _userContextService will be null during migrations
+        }
+
         public DbSet<Employee> Employees => Set<Employee>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -42,16 +61,38 @@ namespace ReferenceWebApi.Infrastructure.Data
         private void UpdateAuditFields()
         {
             var entries = ChangeTracker.Entries<EntityBase>();
+            var username = _userContextService?.Username ?? "System";
+            var now = DateTime.UtcNow;
 
             foreach (var entry in entries)
             {
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        entry.Entity.CreatedAt = DateTime.UtcNow;
+                        entry.Entity.CreatedAt = now;
+                        entry.Entity.CreatedBy = username;
+                        Console.WriteLine($"Set CreatedBy: {username}");
                         break;
+
                     case EntityState.Modified:
-                        entry.Entity.UpdatedAt = DateTime.UtcNow;
+                        // Only update these fields if it's NOT a soft delete
+                        entry.Entity.UpdatedAt = now;
+                        entry.Entity.UpdatedBy = username;
+                        Console.WriteLine($"Set UpdatedBy: {username}");
+                        break;
+
+                    case EntityState.Deleted:
+                        // Convert hard delete to soft delete
+                        entry.State = EntityState.Modified;
+                        entry.Entity.IsDeleted = true;
+                        entry.Entity.DeletedAt = now;
+                        entry.Entity.DeletedBy = username;
+                        Console.WriteLine($"Set DeletedBy: {username}");
+
+                        //// Explicitly mark these properties as modified so that EF core will not override these values
+                        //entry.Property(nameof(EntityBase.IsDeleted)).IsModified = true;
+                        //entry.Property(nameof(EntityBase.DeletedAt)).IsModified = true;
+                        //entry.Property(nameof(EntityBase.DeletedBy)).IsModified = true;
                         break;
                 }
             }

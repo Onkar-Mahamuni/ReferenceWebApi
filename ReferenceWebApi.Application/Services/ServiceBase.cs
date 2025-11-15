@@ -22,13 +22,7 @@ namespace ReferenceWebApi.Application.Services
 
         public virtual async Task<TDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var entity = await _repository.GetByIdAsync(id, cancellationToken);
-
-            if (entity is null)
-            {
-                throw new NotFoundException(typeof(TEntity).Name, id);
-            }
-
+            var entity = await _repository.GetByIdAsync(id, cancellationToken) ?? throw new NotFoundException(typeof(TEntity).Name, id);
             return _mapper.Map<TDto>(entity);
         }
 
@@ -68,13 +62,7 @@ namespace ReferenceWebApi.Application.Services
             TUpdateDto updateDto,
             CancellationToken cancellationToken = default)
         {
-            var entity = await _repository.GetByIdAsync(id, cancellationToken);
-
-            if (entity is null)
-            {
-                throw new NotFoundException(typeof(TEntity).Name, id);
-            }
-
+            var entity = await _repository.GetByIdAsync(id, cancellationToken) ?? throw new NotFoundException(typeof(TEntity).Name, id);
             _mapper.Map(updateDto, entity);
             await _repository.UpdateAsync(entity, cancellationToken);
 

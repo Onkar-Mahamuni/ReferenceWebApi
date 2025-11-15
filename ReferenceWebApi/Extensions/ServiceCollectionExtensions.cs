@@ -40,6 +40,12 @@ namespace ReferenceWebApi.Api.Extensions
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            // HttpContextAccessor
+            services.AddHttpContextAccessor();
+
+            // User Context Service
+            services.AddScoped<IUserContextService, UserContextService>();
+
             // Database
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
