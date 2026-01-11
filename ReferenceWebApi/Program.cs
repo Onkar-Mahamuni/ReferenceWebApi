@@ -34,10 +34,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseHttpsRedirection();
 app.UseCors("AllowAll");
-app.UseAuthorization();
+app.UseExceptionHandler();
+app.UseHttpsRedirection();
+app.UseResponseWrapper();
 app.MapControllers();
 app.MapHealthChecks("/health");
 

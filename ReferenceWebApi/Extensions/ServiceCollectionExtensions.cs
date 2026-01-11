@@ -1,15 +1,16 @@
-﻿using System.Reflection;
-using Microsoft.EntityFrameworkCore;
-using FluentValidation;
+﻿using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using ReferenceWebApi.Api.Configuration;
 using ReferenceWebApi.Api.Filters;
+using ReferenceWebApi.Api.HealthChecks;
 using ReferenceWebApi.Application.Interfaces;
 using ReferenceWebApi.Application.Services;
 using ReferenceWebApi.Domain.Interfaces;
 using ReferenceWebApi.Infrastructure.Data;
 using ReferenceWebApi.Infrastructure.Repositories;
-using ReferenceWebApi.Api.HealthChecks;
+using System.Reflection;
 
 namespace ReferenceWebApi.Api.Extensions
 {
@@ -66,6 +67,12 @@ namespace ReferenceWebApi.Api.Extensions
                 options.Filters.Add<ValidationFilter>();
             });
 
+            // Inject exception handler
+            // 1. Required for IProblemDetailsService to be injectable
+            services.AddProblemDetails();
+            // 2. Register handler
+            services.AddExceptionHandler<GlobalExceptionHandler>();
+
             // API Versioning
             services.AddApiVersioning(options =>
             {
@@ -86,7 +93,7 @@ namespace ReferenceWebApi.Api.Extensions
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "CompanyName.ProjectName API",
+                    Title = "ReferenceWebApi",
                     Version = "v1",
                     Description = "Enterprise CRUD API",
                     Contact = new OpenApiContact
@@ -109,9 +116,11 @@ namespace ReferenceWebApi.Api.Extensions
             {
                 options.AddPolicy("AllowAll", builder =>
                 {
-                    builder.AllowAnyOrigin()
+                    builder.WithOrigins("http://localhost:5173", "http://localhost:3000")
                            .AllowAnyMethod()
-                           .AllowAnyHeader();
+                           .AllowAnyHeader()
+                           .AllowCredentials()
+                           .WithExposedHeaders("Content-Disposition", "X-Pagination");
                 });
             });
 
@@ -119,6 +128,12 @@ namespace ReferenceWebApi.Api.Extensions
             services.AddHealthChecks()
                 .AddDbContextCheck<ApplicationDbContext>()
                 .AddCheck<DatabaseMigrationHealthCheck>("database_migrations");
+
+            // Response Compression
+            services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+            });
 
             return services;
         }

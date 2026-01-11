@@ -11,8 +11,7 @@ namespace ReferenceWebApi.Infrastructure.Data.Configuration
             // Apply base entity configuration (Id, audit fields, indexes)
             base.Configure(builder);
 
-            // Table name
-            builder.ToTable("Employees");
+            builder.HasKey(e => e.Id);
 
             // Employee-specific properties
             builder.Property(e => e.FirstName)
@@ -25,7 +24,8 @@ namespace ReferenceWebApi.Infrastructure.Data.Configuration
 
             builder.Property(e => e.Email)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(255)
+                .HasColumnType("varchar(255)"); // ASCII for email;
 
             builder.Property(e => e.PhoneNumber)
                 .HasMaxLength(20);
@@ -41,7 +41,11 @@ namespace ReferenceWebApi.Infrastructure.Data.Configuration
             builder.Property(e => e.Salary)
                 .HasColumnType("decimal(18,2)");
 
-            // Employee-specific indexes
+            // Computed column (optional)
+            builder.Property(e => e.FullName)
+                .HasComputedColumnSql("[FirstName] + ' ' + [LastName]", stored: false);
+
+            // Unique constraint with filter for soft delete
             builder.HasIndex(e => e.Email)
                 .IsUnique()
                 .HasFilter("[IsDeleted] = 0")

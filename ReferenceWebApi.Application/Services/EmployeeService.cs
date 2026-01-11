@@ -10,11 +10,13 @@ namespace ReferenceWebApi.Application.Services
     public class EmployeeService : ServiceBase<Employee, EmployeeDto, CreateEmployeeDto, UpdateEmployeeDto>, IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
+        //private readonly ICacheService _cacheService;
+        //private const string CacheKeyPrefix = "Employee";
 
         public EmployeeService(IEmployeeRepository repository, IMapper mapper)
             : base(repository, mapper)
         {
-            _employeeRepository = repository;
+            _employeeRepository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
         public override async Task<EmployeeDto> CreateAsync(
